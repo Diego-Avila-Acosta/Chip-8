@@ -1,5 +1,5 @@
 pub struct StackPointer{
-    array: [u16; 16],
+    array: [usize; 16],
     length: usize
 }
 
@@ -11,7 +11,7 @@ impl StackPointer {
         }
     }
 
-    pub fn push(&mut self, addr: u16) -> Result<(), String>{
+    pub fn push(&mut self, addr: usize) -> Result<(), String>{
         if self.length == 16 { return Err(String::from("Stack Overflow")) }
 
         self.array[self.length] = addr;
@@ -20,10 +20,10 @@ impl StackPointer {
         Ok(())
     }
 
-    pub fn pop(&mut self) -> Option<u16>{
+    pub fn pop(&mut self) -> Option<usize>{
         if self.length == 0 { return None }
 
-        let result: u16 = self.array[self.length - 1];
+        let result: usize = self.array[self.length - 1];
 
         self.array[self.length - 1] = 0;
         self.length -= 1;

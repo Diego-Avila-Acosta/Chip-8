@@ -7,7 +7,7 @@ pub struct Chip8 {
     delay_timer: u16,
     sound_timer: u16,
     memory: [u8; 4096],
-    pc: u16,
+    pc: usize,
     sp: StackPointer,
 }
 
@@ -37,11 +37,11 @@ impl Chip8 {
             },
             0x10..=0x1F => { // Jump to address
                 let addr: u16 = Chip8::subtract_instruction(0x10, bytes);
-                self.jump_to_address(addr);
+                self.jump_to_address(addr as usize);
             },
             0x20..=0x2F => { // Call subroutine
                 let addr: u16 = Chip8::subtract_instruction(0x10, bytes);
-                self.call_subroutine(addr);
+                self.call_subroutine(addr as usize);
             },
             0x30..=0x3F => { // Skip if equal (1 register)
                 let register = self.registers[(bytes[0] - 0x30) as usize];
@@ -114,7 +114,7 @@ impl Chip8 {
 
                 addr += self.registers[0x0 as usize] as u16;
 
-                self.jump_to_address(addr);
+                self.jump_to_address(addr as usize);
             },
             0xC0..=0xCF => {}, // Random Byte
             0xD0..=0xDF => {}, // Display n-byte
@@ -151,7 +151,7 @@ impl Chip8 {
         byte + bytes[1] as u16
     }
 
-    fn call_subroutine(&mut self, addr_subroutine: u16){
+    fn call_subroutine(&mut self, addr_subroutine: usize){
         match self.sp.push(self.pc) {
             Err(e) => panic!("{e}"),
             _ => ()
@@ -166,7 +166,7 @@ impl Chip8 {
         };
     }
 
-    fn jump_to_address(&mut self, addr: u16) {
+    fn jump_to_address(&mut self, addr: usize) {
         if addr > 4095 { panic!("Can't access memory out of bounds"); }
 
         self.pc = addr;
