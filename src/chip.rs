@@ -223,7 +223,7 @@ impl Chip8 {
 
             self.delay_timer -= 1;
 
-            if let Some(dur) = Duration.from_secs_f64(PERIOD_DELAY_AS_SECS).checked_sub(now.elapsed()) {
+            if let Some(dur) = Duration::from_secs_f64(PERIOD_DELAY_AS_SECS).checked_sub(now.elapsed()) {
                 sleep(dur);
             }
         }
