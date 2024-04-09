@@ -2,6 +2,7 @@ use core::panic;
 use crate::stack::StackPointer;
 use std::time::{Instant, Duration};
 use std::thread::{sleep};
+use super::rom::Rom;
 
 const PERIOD_DELAY_AS_SECS: f64 = 1.0 / 60.0;
 
@@ -16,14 +17,20 @@ pub struct Chip8 {
 }
 
 impl Chip8 {
-    fn new() -> Chip8{
+    pub fn new(rom: Rom) -> Chip8{
+        let mut memory: [u8; 4096] = [0; 4096];
+
+        for (i, addr) in (0x200..(rom.length + 0x200)).enumerate(){
+            memory[addr] = rom.program[i];
+        }
+
         Chip8 {
             registers: [0; 16],
             i_register: 0,
             delay_timer: 0,
             sound_timer: 0,
-            memory: [0; 4096],
-            pc: 0,
+            memory,
+            pc: 0x200,
             sp: StackPointer::new()
         }
     }
