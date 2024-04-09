@@ -243,15 +243,7 @@ impl Chip8 {
         self.registers[addr] -= value;
     }
 
-    fn delay(&mut self){
-        while self.delay_timer != 0{
-            let now = Instant::now();
-
-            self.delay_timer -= 1;
-
-            if let Some(dur) = Duration::from_secs_f64(PERIOD_DELAY_AS_SECS).checked_sub(now.elapsed()) {
-                sleep(dur);
-            }
-        }
+    fn decrement_delay_timer(&mut self){
+        self.delay_timer -= 1;
     }
 }
