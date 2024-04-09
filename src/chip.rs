@@ -9,8 +9,8 @@ const PERIOD_DELAY_AS_SECS: f64 = 1.0 / 60.0;
 pub struct Chip8 {
     registers: [u8; 16],
     i_register: u16,
-    delay_timer: u16,
-    sound_timer: u16,
+    delay_timer: u8,
+    sound_timer: u8,
     memory: [u8; 4096],
     pc: usize,
     sp: StackPointer,
