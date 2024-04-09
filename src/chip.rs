@@ -1,6 +1,10 @@
 use core::panic;
-
 use crate::stack::StackPointer;
+use std::time::{Instant, Duration};
+use std::thread::{sleep};
+
+const PERIOD_DELAY_AS_SECS: f64 = 1.0 / 60.0;
+
 pub struct Chip8 {
     registers: [u8; 16],
     i_register: u16,
@@ -211,5 +215,17 @@ impl Chip8 {
         else { self.registers[0xF as usize] = 0 }
 
         self.registers[addr] -= value;
+    }
+
+    fn delay(&mut self){
+        while self.delay_timer != 0{
+            let now = Instant::now();
+
+            self.delay_timer -= 1;
+
+            if let Some(dur) = Duration.from_secs_f64(PERIOD_DELAY_AS_SECS).checked_sub(now.elapsed()) {
+                sleep(dur);
+            }
+        }
     }
 }
