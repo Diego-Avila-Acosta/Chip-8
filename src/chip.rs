@@ -96,29 +96,25 @@ impl Chip8 {
                 self.add_to_register(addr, bytes[1]);
             },
             0x80..=0x8F => {
+                let addr = (bytes[0] - 0x80) as usize;
                 match bytes[1] {
                     0x01..=0xF1 => {
-                        let addr = (bytes[0] - 0x80) as usize;
                         let value = self.registers[(bytes[1] - 0x01) as usize];
                         self.bitwise_OR(addr, value);
                     },
                     0x02..=0xF2 => {
-                        let addr = (bytes[0] - 0x80) as usize;
                         let value = self.registers[(bytes[1] - 0x02) as usize];
                         self.bitwise_AND(addr, value);
                     },
                     0x03..=0xF3 => {
-                        let addr = (bytes[0] - 0x80) as usize;
                         let value = self.registers[(bytes[1] - 0x03) as usize];
                         self.bitwise_XOR(addr, value);
                     },
                     0x04..=0xF4 => {
-                        let addr = (bytes[0] - 0x80) as usize;
                         let value = self.registers[(bytes[1] - 0x04) as usize];
                         self.add_registers(addr, value);
                     },
                     0x05..=0xF5 => {
-                        let addr = (bytes[0] - 0x80) as usize;
                         let value = self.registers[(bytes[1] - 0x05) as usize];
                         self.subtract_registers(addr, value);
                     },
