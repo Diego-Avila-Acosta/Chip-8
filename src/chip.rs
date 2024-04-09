@@ -156,16 +156,29 @@ impl Chip8 {
                 }
             },
             0xF0..=0xFF => {
+                let address = (bytes[0] - 0xF0) as usize;
                 match bytes[1] {
-                    0x07 => {}, // Set register to delay timer value
+                    0x07 => self.registers[address] = self.delay_timer, // Set register to delay timer value
                     0x0A => {}, // Wait for a key press, and store key value in register
-                    0x15 => {}, // Set delay timer to the value of a register
-                    0x18 => {}, // Set sound timer to the value of a register
-                    0x1E => {}, // Adds I and register x, and stores it in register x
+                    0x15 => self.delay_timer = self.registers[address], // Set delay timer to the value of a register
+                    0x18 => self.sound_timer = self.registers[address], // Set sound timer to the value of a register
+                    0x1E => self.i_register += self.registers[address] as u16, // Adds I and register x, and stores it in register I
                     0x29 => {}, // Set I = location of sprite for digit x
                     0x33 => {}, // 
-                    0x55 => {}, // Store registers 0 through x in memory starting at location I
-                    0x65 => {}, // Read registers 0 through x from memory starting at location I
+                    0x55 => {
+                        let mut j = self.i_register as usize;
+                        for i in 0..=address{
+                            self.memory[j] = self.registers[i];
+                            j += 1;
+                        }
+                    }, // Store registers 0 through x in memory starting at location I
+                    0x65 => {
+                        let mut j = self.i_register as usize;
+                        for i in 0..=address{
+                            self.registers[i] = self.memory[j];
+                            j += 1;
+                        }
+                    }, // Write registers 0 through x from memory starting at location I
                     _ => todo!()
                 }
             },
