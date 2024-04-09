@@ -35,6 +35,25 @@ impl Chip8 {
         }
     }
 
+    pub fn run(&mut self) {
+        loop{
+            let now = Instant::now();
+
+            if self.pc > 0xFFF { break; }
+
+            let instruction = ((self.memory[self.pc] as u16) << 8) + self.memory[self.pc + 1] as u16;
+            
+            if instruction == 0x0000 { break; }
+
+            self.execute_instruction(instruction);
+            self.pc += 2;
+            
+            if let Some(dur) = Duration::from_secs_f64(PERIOD_DELAY_AS_SECS).checked_sub(now.elapsed()) {
+                sleep(dur)
+            }
+        }
+    }
+
     fn execute_instruction(&mut self, instruction: u16){
         let bytes: [u8;2] = instruction.to_be_bytes();
 
