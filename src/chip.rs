@@ -118,9 +118,18 @@ impl Chip8 {
                         let value = self.registers[(bytes[1] - 0x05) as usize];
                         self.subtract_registers(addr, value);
                     },
-                    0x06..=0xF6 => {},
-                    0x07..=0xF7 => {},
-                    0x0E..=0xFE => {},
+                    0x06..=0xF6 => {
+                        let y_addr: usize = ((bytes[1]) - 0x06) as usize;
+                        self.shift_right(addr, y_addr);
+                    },
+                    0x07..=0xF7 => {
+                        let y_addr = (bytes[1] - 0x07) as usize;
+                        self.subtract_not_borrow(addr, y_addr);
+                    },
+                    0x0E..=0xFE => {
+                        let y_addr: usize = ((bytes[1]) - 0x0E) as usize;
+                        self.shift_left(addr, y_addr);
+                    },
                     _ => todo!()
                 }
             },
@@ -252,7 +261,24 @@ impl Chip8 {
         self.registers[addr] -= value;
     }
 
+    fn subtract_not_borrow(&mut self, x: usize, y: usize) {
+        self.registers[y] = if self.registers[x] < self.registers[y] {1} else {0};
+        self.registers[x] = self.registers[y] - self.registers[x];
+    }
+
     fn decrement_delay_timer(&mut self){
         self.delay_timer -= 1;
+    }
+
+    fn shift_right(&mut self, x_addr: usize, y_addr: usize){
+        let lsb = self.registers[x_addr].reverse_bits() >> 7;
+        self.registers[y_addr] = lsb;
+        self.registers[x_addr] = self.registers[x_addr] >> 1;
+    }
+
+    fn shift_left(&mut self, x_addr: usize, y_addr: usize){
+        let msb = self.registers[x_addr] >> 7;
+        self.registers[y_addr] = msb;
+        self.registers[x_addr] = self.registers[x_addr] << 1;
     }
 }
