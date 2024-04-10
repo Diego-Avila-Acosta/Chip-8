@@ -3,6 +3,7 @@ use crate::stack::StackPointer;
 use std::time::{Instant, Duration};
 use std::thread::{sleep};
 use super::rom::Rom;
+use rand::prelude::*;
 
 const PERIOD_DELAY_AS_SECS: f64 = 1.0 / 60.0;
 
@@ -151,7 +152,12 @@ impl Chip8 {
 
                 self.jump_to_address(addr as usize);
             },
-            0xC0..=0xCF => {}, // Random Byte
+            0xC0..=0xCF => { // Random Byte
+                let mut rng = thread_rng();
+                let number: u8 = rng.gen_range(0..=255);
+
+                self.registers[(bytes[0] - 0xC0) as usize] = number & bytes[1];
+            },
             0xD0..=0xDF => {}, // Display n-byte
             0xE0..=0xEF => {
                 match bytes[1] {
