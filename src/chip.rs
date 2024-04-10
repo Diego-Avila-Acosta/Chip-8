@@ -111,12 +111,12 @@ impl Chip8 {
                         self.bitwise_XOR(addr, value);
                     },
                     0x04..=0xF4 => {
-                        let value = self.registers[(bytes[1] - 0x04) as usize];
-                        self.add_registers(addr, value);
+                        let y_addr = (bytes[1] - 0x04) as usize;
+                        self.add_registers(addr, y_addr);
                     },
                     0x05..=0xF5 => {
-                        let value = self.registers[(bytes[1] - 0x05) as usize];
-                        self.subtract_registers(addr, value);
+                        let y_addr = (bytes[1] - 0x05) as usize;
+                        self.subtract_registers(addr, y_addr);
                     },
                     0x06..=0xF6 => {
                         let y_addr: usize = ((bytes[1]) - 0x06) as usize;
@@ -248,17 +248,15 @@ impl Chip8 {
         self.registers[addr] ^= value;
     }
 
-    fn add_registers(&mut self, addr: usize, value: u8) {
-        let (value, carry) = self.registers[addr].overflowing_add(value);
-        self.registers[addr] = value;
-        self.registers[0xF as usize] = if carry {1} else {0};
+    fn add_registers(&mut self, x: usize, y: usize) {
+        let (value, carry) = self.registers[x].overflowing_add(self.registers[y]);
+        self.registers[x] = value;
+        self.registers[y] = if carry {1} else {0};
     }
 
-    fn subtract_registers(&mut self, addr: usize, value: u8) {
-        if self.registers[addr] < value { self.registers[0xF as usize] = 1 }
-        else { self.registers[0xF as usize] = 0 }
-
-        self.registers[addr] -= value;
+    fn subtract_registers(&mut self, x: usize, y: usize) {
+        self.registers[y] = if self.registers[x] > self.registers[y] {1} else {0};
+        self.registers[x] -= self.registers[y];
     }
 
     fn subtract_not_borrow(&mut self, x: usize, y: usize) {
