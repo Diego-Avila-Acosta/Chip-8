@@ -217,7 +217,13 @@ impl Chip8 {
                     0x18 => self.sound_timer = self.registers[address], // Set sound timer to the value of a register
                     0x1E => self.i_register += self.registers[address] as u16, // Adds I and register x, and stores it in register I
                     0x29 => self.i_register = (self.registers[address] * 5) as u16, // Set I = location of sprite for digit x
-                    0x33 => {}, // 
+                    0x33 => { // Store BCD
+                        let decimal = self.registers[address];
+                        let index = self.i_register as usize;
+                        self.memory[index] = decimal / 100;
+                        self.memory[index + 1] = (decimal / 10) % 10;
+                        self.memory[index + 2] = decimal % 10;
+                    }, 
                     0x55 => {
                         let mut j = self.i_register as usize;
                         for i in 0..=address{
