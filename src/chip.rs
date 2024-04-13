@@ -34,6 +34,7 @@ pub struct Chip8 {
     memory: [u8; 4096],
     pc: usize,
     sp: StackPointer,
+    display: [u64; 32]
 }
 
 impl Chip8 {
@@ -59,7 +60,8 @@ impl Chip8 {
             sound_timer: 0,
             memory,
             pc: 0x200,
-            sp: StackPointer::new()
+            sp: StackPointer::new(),
+            display: [0; 32]
         }
     }
 
@@ -185,7 +187,20 @@ impl Chip8 {
 
                 self.registers[(bytes[0] - 0xC0) as usize] = number & bytes[1];
             },
-            0xD0..=0xDF => {}, // Display n-byte
+            0xD0..=0xDF => {
+                let x = self.registers[(bytes[0] - 0xD0) as usize];
+                let y_addr = bytes[1] >> 4;
+                let n = (bytes[1] - (y_addr << 4)) as u16;
+                let mut sprites: [u8; 16] = [0;16];
+                let y = self.registers[y_addr as usize] as usize;
+                
+                (self.i_register..self.i_register + n).enumerate()
+                    .for_each(|(i, addr)| sprites[i] = self.memory[addr as usize]);
+
+
+                self.display_sprite(sprites, x as i32, y);
+
+            }, // Display n-byte
             0xE0..=0xEF => {
                 match bytes[1] {
                     0x9E => {}, // Skip instruction if key is pressed
@@ -311,5 +326,31 @@ impl Chip8 {
         let msb = self.registers[x_addr] >> 7;
         self.registers[y_addr] = msb;
         self.registers[x_addr] = self.registers[x_addr] << 1;
+    }
+
+    fn display_sprite(&mut self, sprites: [u8; 16], x: i32, mut y: usize) {
+        let shift: i32 = 64 - (x + 8);
+        let mut flag = false;
+
+        for sprite in sprites {
+            let ones_before = self.display[y].count_ones();
+            let sprite = sprite as u64;
+
+            if shift >= 0 { self.display[y] ^= sprite << shift }
+            else {
+                let mut sprite_wrapped = sprite >> (-1*shift);
+                sprite_wrapped += sprite << (64 + shift);
+                self.display[y] ^= sprite_wrapped;
+            }
+
+            let ones_after = self.display[y].count_ones();
+            if !flag && ((ones_before + sprite.count_ones()) > ones_after) {
+                flag = true;
+                self.registers[0xF] = 1;
+            }
+
+            y += 1;
+            if y == 32 { y = 0; }
+        }
     }
 }
