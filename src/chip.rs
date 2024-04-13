@@ -90,7 +90,7 @@ impl Chip8 {
         match bytes[0] {
             0x00 => {
                 match bytes[1] {
-                    0xE0 => {}, //Clear display
+                    0xE0 => { self.display = [0;32] }, //Clear display
                     0xEE => { self.return_subroutine() },
                     _ => panic!("Incorrect instruction")
                 }
