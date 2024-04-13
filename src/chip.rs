@@ -216,7 +216,7 @@ impl Chip8 {
                     0x15 => self.delay_timer = self.registers[address], // Set delay timer to the value of a register
                     0x18 => self.sound_timer = self.registers[address], // Set sound timer to the value of a register
                     0x1E => self.i_register += self.registers[address] as u16, // Adds I and register x, and stores it in register I
-                    0x29 => {}, // Set I = location of sprite for digit x
+                    0x29 => self.i_register = (self.registers[address] * 5) as u16, // Set I = location of sprite for digit x
                     0x33 => {}, // 
                     0x55 => {
                         let mut j = self.i_register as usize;
