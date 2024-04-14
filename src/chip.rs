@@ -211,7 +211,14 @@ impl Chip8 {
                 let address = (bytes[0] - 0xF0) as usize;
                 match bytes[1] {
                     0x07 => self.registers[address] = self.delay_timer.get(), // Set register to delay timer value
-                    0x0A => {}, // Wait for a key press, and store key value in register
+                    0x0A => { // Wait for a key press, and store key value in register
+                        match key_pressed {
+                            Some(key_pressed) => {
+                                self.registers[address] = key_pressed;
+                            },
+                            None => self.pc -= 2,
+                        }
+                    }, 
                     0x15 => self.delay_timer.set(self.registers[address]), // Set delay timer to the value of a register
                     0x18 => self.sound_timer.set(self.registers[address]), // Set sound timer to the value of a register
                     0x1E => self.i_register += self.registers[address] as u16, // Adds I and register x, and stores it in register I
