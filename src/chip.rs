@@ -192,9 +192,18 @@ impl Chip8 {
 
             }, // Display n-byte
             0xE0..=0xEF => {
+                let value = self.registers[(bytes[0] - 0xE0) as usize];
                 match bytes[1] {
-                    0x9E => {}, // Skip instruction if key is pressed
-                    0xA1 => {}, // Skip instruction if key is not pressed
+                    0x9E => { // Skip instruction if key is pressed
+                        if let Some(key_pressed) = key_pressed {
+                            if key_pressed == value { self.pc += 2; }
+                        }
+                    }, 
+                    0xA1 => { // Skip instruction if key is not pressed
+                        if let Some(key_pressed) = key_pressed {
+                            if key_pressed != value { self.pc += 2; }
+                        }
+                    }, 
                     _ => todo!()
                 }
             },
