@@ -9,6 +9,7 @@ use spin_sleep::sleep;
 pub mod stack;
 pub mod chip;
 pub mod rom;
+pub mod timer;
 
 fn main() {
     let mut args = env::args();
@@ -22,7 +23,6 @@ fn main() {
     };
 
     let rom = Rom::read_rom(&rom_path);
-    let mut chip8 = Chip8::new(rom);
 
     let hertz: f64 = match args.next() {
         Some(r) => r.parse().expect("Hertz must be a number"),
@@ -30,10 +30,13 @@ fn main() {
     };
     let cycle = 1.0_f64 / hertz;
 
+    let mut chip8 = Chip8::new(rom);
+    let mut delta_time: f64 = 0.0;
+
     while !raylib_handler.window_should_close() {
         let now = Instant::now();
         
-        let flag = chip8.run_instruction();
+        let flag = chip8.run_instruction(delta_time);
         if flag { break; }
         
         draw(&mut raylib_handler, &raylib_thread_handler, &chip8);
@@ -41,6 +44,8 @@ fn main() {
         if let Some(dur) = Duration::from_secs_f64(cycle).checked_sub(now.elapsed()){
             sleep(dur);
         }
+
+        delta_time = now.elapsed().as_secs_f64();
     }
 }
 

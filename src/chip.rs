@@ -1,4 +1,5 @@
 use crate::stack::StackPointer;
+use crate::timer::Timer;
 use super::rom::Rom;
 use rand::prelude::*;
 
@@ -24,8 +25,8 @@ const SPRITES: [[u8;5]; 16] = [
 pub struct Chip8 {
     registers: [u8; 16],
     i_register: u16,
-    delay_timer: u8,
-    sound_timer: u8,
+    delay_timer: Timer,
+    sound_timer: Timer,
     memory: [u8; 4096],
     pc: usize,
     sp: StackPointer,
@@ -51,8 +52,8 @@ impl Chip8 {
         Chip8 {
             registers: [0; 16],
             i_register: 0,
-            delay_timer: 0,
-            sound_timer: 0,
+            delay_timer: Timer::new(60),
+            sound_timer: Timer::new(60),
             memory,
             pc: 0x200,
             sp: StackPointer::new(),
@@ -60,7 +61,9 @@ impl Chip8 {
         }
     }
 
-    pub fn run_instruction(&mut self) -> bool {
+    pub fn run_instruction(&mut self, delta_time: f64) -> bool {
+        self.delay_timer.check(delta_time);
+
         let instruction = ((self.memory[self.pc] as u16) << 8) + self.memory[self.pc + 1] as u16;
         self.pc += 2;
         
@@ -197,10 +200,10 @@ impl Chip8 {
             0xF0..=0xFF => {
                 let address = (bytes[0] - 0xF0) as usize;
                 match bytes[1] {
-                    0x07 => self.registers[address] = self.delay_timer, // Set register to delay timer value
+                    0x07 => self.registers[address] = self.delay_timer.get(), // Set register to delay timer value
                     0x0A => {}, // Wait for a key press, and store key value in register
-                    0x15 => self.delay_timer = self.registers[address], // Set delay timer to the value of a register
-                    0x18 => self.sound_timer = self.registers[address], // Set sound timer to the value of a register
+                    0x15 => self.delay_timer.set(self.registers[address]), // Set delay timer to the value of a register
+                    0x18 => self.sound_timer.set(self.registers[address]), // Set sound timer to the value of a register
                     0x1E => self.i_register += self.registers[address] as u16, // Adds I and register x, and stores it in register I
                     0x29 => self.i_register = (self.registers[address] * 5) as u16, // Set I = location of sprite for digit x
                     0x33 => { // Store BCD
@@ -302,10 +305,6 @@ impl Chip8 {
     fn subtract_not_borrow(&mut self, x: usize, y: usize) {
         self.registers[y] = if self.registers[x] < self.registers[y] {1} else {0};
         self.registers[x] = self.registers[y] - self.registers[x];
-    }
-
-    fn decrement_delay_timer(&mut self){
-        self.delay_timer -= 1;
     }
 
     fn shift_right(&mut self, x_addr: usize, y_addr: usize){
