@@ -1,10 +1,6 @@
 use crate::stack::StackPointer;
-use std::time::{Instant, Duration};
-use std::thread::{sleep};
 use super::rom::Rom;
 use rand::prelude::*;
-
-const PERIOD_DELAY_AS_SECS: f64 = 1.0 / 60.0;
 
 const SPRITES: [[u8;5]; 16] = [
     [0xF0, 0x90, 0x90, 0x90, 0xF0], // 0
