@@ -3,6 +3,8 @@ use chip::Chip8;
 use rom::Rom;
 use raylib::prelude::*;
 use bit::BitIndex;
+use std::time::{Instant, Duration};
+use spin_sleep::sleep;
 
 pub mod stack;
 pub mod chip;
@@ -22,11 +24,23 @@ fn main() {
     let rom = Rom::read_rom(&rom_path);
     let mut chip8 = Chip8::new(rom);
 
+    let hertz: f64 = match args.next() {
+        Some(r) => r.parse().expect("Hertz must be a number"),
+        None => 700.0_f64
+    };
+    let cycle = 1.0_f64 / hertz;
+
     while !raylib_handler.window_should_close() {
+        let now = Instant::now();
+        
         let flag = chip8.run_instruction();
         if flag { break; }
         
-        draw(&mut raylib_handler, &raylib_thread_handler, &chip8)
+        draw(&mut raylib_handler, &raylib_thread_handler, &chip8);
+
+        if let Some(dur) = Duration::from_secs_f64(cycle).checked_sub(now.elapsed()){
+            sleep(dur);
+        }
     }
 }
 
