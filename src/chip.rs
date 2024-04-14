@@ -33,7 +33,7 @@ pub struct Chip8 {
     memory: [u8; 4096],
     pc: usize,
     sp: StackPointer,
-    display: [u64; 32]
+    pub display: [u64; 32]
 }
 
 impl Chip8 {
@@ -64,23 +64,14 @@ impl Chip8 {
         }
     }
 
-    pub fn run(&mut self) {
-        loop{
-            let now = Instant::now();
+    pub fn run_instruction(&mut self) -> bool {
+        let instruction = ((self.memory[self.pc] as u16) << 8) + self.memory[self.pc + 1] as u16;
+        self.pc += 2;
+        
+        if instruction == 0x0000 { return true; }
+        self.execute_instruction(instruction);
 
-            if self.pc > 0xFFF { break; }
-
-            let instruction = ((self.memory[self.pc] as u16) << 8) + self.memory[self.pc + 1] as u16;
-            
-            if instruction == 0x0000 { break; }
-
-            self.execute_instruction(instruction);
-            self.pc += 2;
-            
-            if let Some(dur) = Duration::from_secs_f64(PERIOD_DELAY_AS_SECS).checked_sub(now.elapsed()) {
-                sleep(dur)
-            }
-        }
+        false
     }
 
     fn execute_instruction(&mut self, instruction: u16){

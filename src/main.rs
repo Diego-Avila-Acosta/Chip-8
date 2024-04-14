@@ -19,12 +19,15 @@ fn main() {
         None => panic!("Insufficient arguments passed")
     };
 
-    
     let rom = Rom::read_rom(&rom_path);
-
     let mut chip8 = Chip8::new(rom);
 
-    chip8.run();
+    while !raylib_handler.window_should_close() {
+        let flag = chip8.run_instruction();
+        if flag { break; }
+        
+        draw(&mut raylib_handler, &raylib_thread_handler, &chip8)
+    }
 }
 
 fn draw(raylib_handler: &mut RaylibHandle, raylib_thread_handler: &RaylibThread, chip8: &Chip8){
