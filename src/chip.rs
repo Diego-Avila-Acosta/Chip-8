@@ -2,6 +2,7 @@ use crate::stack::StackPointer;
 use crate::timer::Timer;
 use super::rom::Rom;
 use rand::prelude::*;
+use raylib::ffi::KeyboardKey;
 
 const SPRITES: [[u8;5]; 16] = [
     [0xF0, 0x90, 0x90, 0x90, 0xF0], // 0
@@ -61,19 +62,19 @@ impl Chip8 {
         }
     }
 
-    pub fn run_instruction(&mut self, delta_time: f64) -> bool {
+    pub fn run_instruction(&mut self, delta_time: f64, key_pressed: Option<u8>) -> bool {
         self.delay_timer.check(delta_time);
 
         let instruction = ((self.memory[self.pc] as u16) << 8) + self.memory[self.pc + 1] as u16;
         self.pc += 2;
         
         if instruction == 0x0000 { return true; }
-        self.execute_instruction(instruction);
+        self.execute_instruction(instruction, key_pressed);
 
         false
     }
 
-    fn execute_instruction(&mut self, instruction: u16){
+    fn execute_instruction(&mut self, instruction: u16, key_pressed: Option<u8>){
         let bytes: [u8;2] = instruction.to_be_bytes();
 
         match bytes[0] {

@@ -35,8 +35,12 @@ fn main() {
 
     while !raylib_handler.window_should_close() {
         let now = Instant::now();
-        
-        let flag = chip8.run_instruction(delta_time);
+        let key_pressed = match raylib_handler.get_key_pressed() {
+            Some(key) => get_mapped_key(key),
+            None => None
+        };
+
+        let flag = chip8.run_instruction(delta_time, key_pressed);
         if flag { break; }
         
         draw(&mut raylib_handler, &raylib_thread_handler, &chip8);
@@ -60,4 +64,26 @@ fn draw(raylib_handler: &mut RaylibHandle, raylib_thread_handler: &RaylibThread,
             }
         }
     }
+}
+
+fn get_mapped_key(key: KeyboardKey) -> Option<u8> {
+    Some(match key{
+        KeyboardKey::KEY_ONE => 0,
+        KeyboardKey::KEY_TWO => 1,
+        KeyboardKey::KEY_THREE => 2,
+        KeyboardKey::KEY_FOUR => 3,
+        KeyboardKey::KEY_Q => 4,
+        KeyboardKey::KEY_W => 5,
+        KeyboardKey::KEY_E => 6,
+        KeyboardKey::KEY_R => 7,
+        KeyboardKey::KEY_A => 8,
+        KeyboardKey::KEY_S => 9,
+        KeyboardKey::KEY_D => 10,
+        KeyboardKey::KEY_F => 11,
+        KeyboardKey::KEY_Z => 12,
+        KeyboardKey::KEY_X => 13,
+        KeyboardKey::KEY_C => 14,
+        KeyboardKey::KEY_V => 15,
+        _ => { return None }
+    })
 }
