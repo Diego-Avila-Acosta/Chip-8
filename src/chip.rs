@@ -1,4 +1,3 @@
-use core::panic;
 use crate::stack::StackPointer;
 use std::time::{Instant, Duration};
 use std::thread::{sleep};
