@@ -90,7 +90,7 @@ impl Chip8 {
                 self.jump_to_address(addr as usize);
             },
             0x20..=0x2F => { // Call subroutine
-                let addr: u16 = Chip8::subtract_instruction(0x10, bytes);
+                let addr: u16 = Chip8::subtract_instruction(0x20, bytes);
                 self.call_subroutine(addr as usize);
             },
             0x30..=0x3F => { // Skip if equal (1 register)
