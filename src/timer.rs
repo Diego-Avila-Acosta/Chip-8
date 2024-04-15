@@ -16,6 +16,7 @@ impl Timer {
     }
 
     pub fn set(&mut self, number: u8){ 
+        if number == 0 { return; }
         self.number = number;
         self.flag = true;
     }
