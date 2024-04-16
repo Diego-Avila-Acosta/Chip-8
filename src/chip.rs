@@ -2,7 +2,6 @@ use crate::stack::StackPointer;
 use crate::timer::Timer;
 use super::rom::Rom;
 use rand::prelude::*;
-use raylib::ffi::KeyboardKey;
 
 const SPRITES: [[u8;5]; 16] = [
     [0xF0, 0x90, 0x90, 0x90, 0xF0], // 0
