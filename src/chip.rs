@@ -137,9 +137,9 @@ impl Chip8 {
     }
 
     fn decode(&self, instruction: u16) -> Instruction {
-        let i = (0xF000 & instruction) << 12;
-        let x = ((0x0F00 & instruction) << 8) as usize;
-        let y = ((0x00F0 & instruction) << 4) as usize;
+        let i = (0xF000 & instruction) >> 12;
+        let x = ((0x0F00 & instruction) >> 8) as usize;
+        let y = ((0x00F0 & instruction) >> 4) as usize;
         let n = (0x000F & instruction) as u8;
         let nn = (0x00FF & instruction) as u8;
         let nnn = (0x0FFF & instruction) as u16;
@@ -187,6 +187,7 @@ impl Chip8 {
                 Instruction::Jump(nnn as usize)
             },
             0xC => Instruction::RandomByte(x, nn),
+            0xD => Instruction::Display(Display::DisplayBytes(x, y, n)),
             0xE => {
                 match nn {
                     0x9E => Instruction::Skip(Skip::SkipIfKeyPressed, x, 0),
@@ -244,11 +245,11 @@ impl Chip8 {
                     },
                     ArithmeticLogic::SubtractWithBorrow => {
                         self.registers[0xF] = if self.registers[addr] >= value {1} else {0};
-                        self.registers[addr] -= value;
+                        self.registers[addr] = self.registers[addr].overflowing_sub(value).0;
                     },
                     ArithmeticLogic::SubtractYWithBorrow => {
                         self.registers[0xF] = if self.registers[addr] <= value {1} else {0};
-                        self.registers[addr] = value - self.registers[addr];
+                        self.registers[addr] = value.overflowing_sub(self.registers[addr]).0;
                     }
                 }
             },
@@ -322,7 +323,9 @@ impl Chip8 {
                     Display::Clear => self.display = [0; 32],
                     Display::DisplayBytes(x, mut y, n) => {
                         let mut sprites: [u8; 16] = [0;16];
-                        
+                        let x = self.registers[x];
+                        let mut y = self.registers[y] as usize;
+
                         (self.i_register..self.i_register + n as u16).enumerate()
                             .for_each(|(i, addr)| sprites[i] = self.memory[addr as usize]);
     
