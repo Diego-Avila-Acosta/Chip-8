@@ -40,7 +40,7 @@ fn main() {
             None => None
         };
 
-        chip8.run_instruction(delta_time, key_pressed);
+        chip8.run_cycle(delta_time, key_pressed);
 
         draw(&mut raylib_handler, &raylib_thread_handler, &chip8);
 
