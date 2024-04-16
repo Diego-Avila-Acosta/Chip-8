@@ -40,9 +40,8 @@ fn main() {
             None => None
         };
 
-        let flag = chip8.run_instruction(delta_time, key_pressed);
-        if flag { break; }
-        
+        chip8.run_instruction(delta_time, key_pressed);
+
         draw(&mut raylib_handler, &raylib_thread_handler, &chip8);
 
         if let Some(dur) = Duration::from_secs_f64(cycle).checked_sub(now.elapsed()){

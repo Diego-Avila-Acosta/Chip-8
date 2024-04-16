@@ -124,9 +124,9 @@ impl Chip8 {
 
     pub fn run_instruction(&mut self, delta_time: f64, key_pressed: Option<u8>) {
         self.delay_timer.check(delta_time);
-
         let instruction = self.fetch();
         let instruction_type = self.decode(instruction);
+        self.execute(instruction_type, key_pressed)
     }
 
     fn fetch(&mut self) -> u16{
@@ -209,6 +209,157 @@ impl Chip8 {
                 }
             },
             _ => todo!()
+        }
+    }
+
+    fn execute(&mut self, instruction: Instruction, key_pressed: Option<u8>){
+        match instruction {
+            Instruction::Jump(addr) => self.pc = addr,
+            Instruction::Subroutine(typ) => {
+                match typ {
+                    Subroutine::Return => self.pc = self.sp.pop(),
+                    Subroutine::Call(addr) => {
+                        self.sp.push(self.pc);
+                        self.pc = addr
+                    }
+                }
+            },
+            Instruction::ArithmeticLogic(typ, addr, value) => {
+                match typ {
+                    ArithmeticLogic::BitwiseOr => self.registers[addr] |= value,
+                    ArithmeticLogic::BitwiseAnd => self.registers[addr] &= value,
+                    ArithmeticLogic::BitwiseXor => self.registers[addr] ^= value,
+                    ArithmeticLogic::AddsWithCarry => {
+                        let (value, carry) = self.registers[addr].overflowing_add(value);
+                        self.registers[0xF] = if carry {1} else {0};
+                        self.registers[addr] = value;
+                    },
+                    ArithmeticLogic::ShiftRight => {
+                        self.registers[0xF] = 0x01 & self.registers[addr];
+                        self.registers[addr] >>= 1;
+                    },
+                    ArithmeticLogic::ShiftLeft => {
+                        self.registers[0xF] = (0x80 & self.registers[addr]) >> 7;
+                        self.registers[addr] <<= 1;
+                    },
+                    ArithmeticLogic::SubtractWithBorrow => {
+                        self.registers[0xF] = if self.registers[addr] >= value {1} else {0};
+                        self.registers[addr] -= value;
+                    },
+                    ArithmeticLogic::SubtractYWithBorrow => {
+                        self.registers[0xF] = if self.registers[addr] <= value {1} else {0};
+                        self.registers[addr] = value - self.registers[addr];
+                    }
+                }
+            },
+            Instruction::Register(typ, addr, value) => {
+                match typ {
+                    Register::Add => self.registers[addr] = self.registers[addr].overflowing_add(value).0,
+                    Register::Set => self.registers[addr] = value,
+                    Register::SetToDelayTimer => self.registers[addr] = self.delay_timer.get(),
+                    Register::ReadFromMemory => {
+                        let mut j = self.i_register as usize;
+                        for i in 0..=addr{
+                            self.registers[i] = self.memory[j];
+                            j += 1;
+                        }
+                    },
+                    Register::StoreInMemory => {
+                        let mut j = self.i_register as usize;
+                        for i in 0..=addr{
+                            self.memory[j] = self.registers[i];
+                            j += 1;
+                        }
+                    },
+                }
+            },
+            Instruction::Skip(typ, addr, value) => {
+                let x = self.registers[addr];
+                match typ {
+                    Skip::SkipIfEqual => self.pc += if x == value {2} else {0},
+                    Skip::SkipIfNotEqual => self.pc += if x != value {2} else {0},
+                    Skip::SkipIfKeyPressed => {
+                        if let Some(key_pressed) = key_pressed {
+                            self.pc += if x == key_pressed {2} else {0};
+                        }
+                    },
+                    Skip::SkipIfKeyNotPressed => {
+                        if let Some(key_pressed) = key_pressed {
+                            self.pc += if x != key_pressed {2} else {0};
+                        }
+                    }
+                }
+            },
+            Instruction::IRegister(typ) => {
+                match typ {
+                    IRegister::Set(nnn) => self.i_register = nnn,
+                    IRegister::AddRegister(addr) => self.i_register += self.registers[addr] as u16,
+                    IRegister::SetToLocationSprite(addr) => self.i_register = self.registers[addr] as u16 * 5,
+                }
+            },
+            Instruction::Timer(typ, addr) => {
+                let x = self.registers[addr];
+                match typ {
+                    TimerInstruction::SetDelay => self.delay_timer.set(x),
+                    TimerInstruction::SetSound => self.sound_timer.set(x)
+                }
+            },
+            Instruction::StoreBCD(addr) => {
+                let decimal = self.registers[addr];
+                let index = self.i_register as usize;
+                self.memory[index] = decimal / 100;
+                self.memory[index + 1] = (decimal / 10) % 10;
+                self.memory[index + 2] = decimal % 10;
+            },
+            Instruction::RandomByte(addr, value) => {
+                let mut rng = thread_rng();
+                let number: u8 = rng.gen_range(0..=value);
+    
+                self.registers[addr] = number & value;
+            },
+            Instruction::Display(typ) => {
+                match typ {
+                    Display::Clear => self.display = [0; 32],
+                    Display::DisplayBytes(x, mut y, n) => {
+                        let mut sprites: [u8; 16] = [0;16];
+                        
+                        (self.i_register..self.i_register + n as u16).enumerate()
+                            .for_each(|(i, addr)| sprites[i] = self.memory[addr as usize]);
+    
+                        let shift: i32 = 64 - (x as i32 + 8);
+                        let mut flag = false;
+                
+                        for sprite in sprites {
+                            let ones_before = self.display[y].count_ones();
+                            let sprite = sprite as u64;
+                
+                            if shift >= 0 { self.display[y] ^= sprite << shift }
+                            else {
+                                let mut sprite_wrapped = sprite >> (-1*shift);
+                                sprite_wrapped += sprite << (64 + shift);
+                                self.display[y] ^= sprite_wrapped;
+                            }
+                
+                            let ones_after = self.display[y].count_ones();
+                            if !flag && ((ones_before + sprite.count_ones()) > ones_after) {
+                                flag = true;
+                                self.registers[0xF] = 1;
+                            }
+                
+                            y += 1;
+                            if y == 32 { y = 0; }
+                        }
+                    }
+                }
+            },
+            Instruction::WaitKeyPress(addr) => {
+                match key_pressed {
+                    Some(key_pressed) => {
+                        self.registers[addr] = key_pressed;
+                    },
+                    None => self.pc -= 2,
+                }
+            }
         }
     }
 }
