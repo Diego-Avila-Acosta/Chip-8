@@ -122,8 +122,8 @@ impl Chip8 {
         }
     }
 
-    pub fn run_cycle(&mut self, delta_time: f64, key_pressed: Option<u8>) {
-        self.delay_timer.check(delta_time);
+    pub fn run_cycle(&mut self, key_pressed: Option<u8>) {
+        self.delay_timer.check();
         let instruction = self.fetch();
         let instruction_type = self.decode(instruction);
         self.execute(instruction_type, key_pressed)

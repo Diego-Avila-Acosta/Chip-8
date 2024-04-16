@@ -11,6 +11,8 @@ pub mod chip;
 pub mod rom;
 pub mod timer;
 
+static mut DELTA_TIME: f64= 0.0;
+
 fn main() {
     let mut args = env::args();
     let (mut raylib_handler, mut raylib_thread_handler) = raylib::init()
@@ -31,13 +33,12 @@ fn main() {
     let cycle = 1.0_f64 / hertz;
 
     let mut chip8 = Chip8::new(rom);
-    let mut delta_time: f64 = 0.0;
 
     while !raylib_handler.window_should_close() {
         let now = Instant::now();
         let key_pressed = is_key_down(&mut raylib_handler);
 
-        chip8.run_cycle(delta_time, key_pressed);
+        chip8.run_cycle(key_pressed);
 
         draw(&mut raylib_handler, &raylib_thread_handler, &chip8);
 
@@ -45,7 +46,7 @@ fn main() {
             sleep(dur);
         }
 
-        delta_time = now.elapsed().as_secs_f64();
+        unsafe { DELTA_TIME = now.elapsed().as_secs_f64(); }
     }
 }
 
