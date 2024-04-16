@@ -125,11 +125,16 @@ impl Chip8 {
     pub fn run_instruction(&mut self, delta_time: f64, key_pressed: Option<u8>) -> bool {
         self.delay_timer.check(delta_time);
 
-        let instruction = ((self.memory[self.pc] as u16) << 8) + self.memory[self.pc + 1] as u16;
-        self.pc += 2;
+        let instruction = self.fetch();
         
         if instruction == 0x0000 { return true; }
         false
     }
 
+    fn fetch(&mut self) -> u16{
+        let instruction = ((self.memory[self.pc] as u16) << 8) + self.memory[self.pc + 1] as u16;
+        self.pc += 2;
+    
+        instruction
+    }
 }
