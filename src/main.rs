@@ -35,14 +35,10 @@ fn main() {
 
     while !raylib_handler.window_should_close() {
         let now = Instant::now();
-        let key_pressed = match raylib_handler.get_key_pressed() {
-            Some(key) => get_mapped_key(key),
-            None => None
-        };
+        let key_pressed = is_key_down(&mut raylib_handler);
 
-        let flag = chip8.run_instruction(delta_time, key_pressed);
-        if flag { break; }
-        
+        chip8.run_cycle(delta_time, key_pressed);
+
         draw(&mut raylib_handler, &raylib_thread_handler, &chip8);
 
         if let Some(dur) = Duration::from_secs_f64(cycle).checked_sub(now.elapsed()){
@@ -66,24 +62,22 @@ fn draw(raylib_handler: &mut RaylibHandle, raylib_thread_handler: &RaylibThread,
     }
 }
 
-fn get_mapped_key(key: KeyboardKey) -> Option<u8> {
-    Some(match key{
-        KeyboardKey::KEY_ONE => 0,
-        KeyboardKey::KEY_TWO => 1,
-        KeyboardKey::KEY_THREE => 2,
-        KeyboardKey::KEY_FOUR => 3,
-        KeyboardKey::KEY_Q => 4,
-        KeyboardKey::KEY_W => 5,
-        KeyboardKey::KEY_E => 6,
-        KeyboardKey::KEY_R => 7,
-        KeyboardKey::KEY_A => 8,
-        KeyboardKey::KEY_S => 9,
-        KeyboardKey::KEY_D => 10,
-        KeyboardKey::KEY_F => 11,
-        KeyboardKey::KEY_Z => 12,
-        KeyboardKey::KEY_X => 13,
-        KeyboardKey::KEY_C => 14,
-        KeyboardKey::KEY_V => 15,
-        _ => { return None }
-    })
+fn is_key_down(raylib_handler: &mut RaylibHandle) -> Option<u8> {
+    if raylib_handler.is_key_down(KeyboardKey::KEY_ONE) { return Some(0) }
+    if raylib_handler.is_key_down(KeyboardKey::KEY_TWO) { return Some(1) }
+    if raylib_handler.is_key_down(KeyboardKey::KEY_THREE) { return Some(2) }
+    if raylib_handler.is_key_down(KeyboardKey::KEY_FOUR) { return Some(3) }
+    if raylib_handler.is_key_down(KeyboardKey::KEY_Q) { return Some(4) }
+    if raylib_handler.is_key_down(KeyboardKey::KEY_W) { return Some(5) }
+    if raylib_handler.is_key_down(KeyboardKey::KEY_E) { return Some(6) }
+    if raylib_handler.is_key_down(KeyboardKey::KEY_R) { return Some(7) }
+    if raylib_handler.is_key_down(KeyboardKey::KEY_A) { return Some(8) }
+    if raylib_handler.is_key_down(KeyboardKey::KEY_S) { return Some(9) }
+    if raylib_handler.is_key_down(KeyboardKey::KEY_D) { return Some(10) }
+    if raylib_handler.is_key_down(KeyboardKey::KEY_F) { return Some(11) }
+    if raylib_handler.is_key_down(KeyboardKey::KEY_Z) { return Some(12) }
+    if raylib_handler.is_key_down(KeyboardKey::KEY_X) { return Some(13) }
+    if raylib_handler.is_key_down(KeyboardKey::KEY_C) { return Some(14) }
+    if raylib_handler.is_key_down(KeyboardKey::KEY_V) { return Some(15) }
+    None
 }

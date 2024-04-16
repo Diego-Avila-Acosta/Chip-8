@@ -11,23 +11,21 @@ impl StackPointer {
         }
     }
 
-    pub fn push(&mut self, addr: usize) -> Result<(), String>{
-        if self.length == 16 { return Err(String::from("Stack Overflow")) }
+    pub fn push(&mut self, addr: usize){
+        if self.length == 16 { panic!("Stack Overflow") }
 
         self.array[self.length] = addr;
         self.length += 1;
-
-        Ok(())
     }
 
-    pub fn pop(&mut self) -> Option<usize>{
-        if self.length == 0 { return None }
+    pub fn pop(&mut self) -> usize{
+        if self.length == 0 { panic!("The stack pointer is empty") }
 
         let result: usize = self.array[self.length - 1];
 
         self.array[self.length - 1] = 0;
         self.length -= 1;
 
-        Some(result)
+        result
     }
 }
