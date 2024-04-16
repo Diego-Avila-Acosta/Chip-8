@@ -22,6 +22,67 @@ const SPRITES: [[u8;5]; 16] = [
     [0xF0, 0x80, 0xF0, 0x80, 0x80], // F
 ];
 
+enum ArithmeticLogic {
+    BitwiseOr,
+    BitwiseAnd,
+    BitwiseXor,
+    AddsWithCarry,
+    SubtractWithBorrow,
+    SubtractYWithBorrow,
+    ShiftLeft,
+    ShiftRight,
+}
+
+enum Display{
+    Clear,
+    DisplayBytes(usize, usize, u8)
+}
+
+enum Subroutine {
+    Return,
+    Call(usize)
+}
+
+enum Skip {
+    SkipIfEqual,
+    SkipIfNotEqual,
+    SkipIfKeyPressed,
+    SkipIfKeyNotPressed
+}
+
+enum Register {
+    Set,
+    Add,
+    SetToDelayTimer,
+    StoreInMemory,
+    ReadFromMemory
+}
+
+enum TimerInstruction{
+    SetDelay,
+    SetSound
+}
+
+enum IRegister {
+    Set(u16),
+    AddRegister(usize),
+    SetToLocationSprite(usize)
+}
+
+enum Instruction {
+    Display(Display),
+    Subroutine(Subroutine),
+    Skip(Skip, usize, u8),
+    ArithmeticLogic(ArithmeticLogic, usize, u8),
+    Jump(usize),
+    Register(Register, usize, u8),
+    IRegister(IRegister),
+    Timer(TimerInstruction, usize),
+    RandomByte(usize, u8),
+    StoreBCD(usize),
+    WaitKeyPress(usize)
+}
+
 pub struct Chip8 {
     registers: [u8; 16],
     i_register: u16,
