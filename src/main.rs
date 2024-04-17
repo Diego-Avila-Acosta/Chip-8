@@ -1,39 +1,35 @@
-use std::env;
 use chip::Chip8;
 use rom::Rom;
 use raylib::prelude::*;
 use bit::BitIndex;
 use std::time::{Instant, Duration};
 use spin_sleep::sleep;
+use config::Config;
 
 pub mod stack;
 pub mod chip;
 pub mod rom;
 pub mod timer;
+pub mod config;
+pub mod gui;
 
 static mut DELTA_TIME: f64= 0.0;
 
 fn main() {
-    let mut args = env::args();
-    let (mut raylib_handler, mut raylib_thread_handler) = raylib::init()
-        .size(640, 320)
-        .build();
+    let (play_flag, config): (bool, Config)= gui::run();
 
-    let rom_path = match args.nth(1) {
-        Some(r) => r,
-        None => panic!("Insufficient arguments passed")
-    };
+    if !play_flag { return }
+    
+    let rom = Rom::read_rom(&config.rom_path);
+    let mut chip8 = Chip8::new(rom, &config);
 
-    let rom = Rom::read_rom(&rom_path);
+    let (mut raylib_handler, raylib_thread_handler) = raylib::init()
+    .size(640, 320)
+    .build();
 
-    let hertz: f64 = match args.next() {
-        Some(r) => r.parse().expect("Hertz must be a number"),
-        None => 700.0_f64
-    };
-    let cycle = 1.0_f64 / hertz;
-
-    let mut chip8 = Chip8::new(rom);
-
+    let cycle = 1.0_f64 / config.cpu_hertz as f64;
+    raylib_handler.set_target_fps(config.cpu_hertz);
+    
     while !raylib_handler.window_should_close() {
         let now = Instant::now();
         let key_pressed = is_key_down(&mut raylib_handler);
