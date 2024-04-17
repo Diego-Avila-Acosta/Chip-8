@@ -36,7 +36,10 @@ fn main() {
 
         chip8.run_cycle(key_pressed);
 
-        draw(&mut raylib_handler, &raylib_thread_handler, &chip8);
+        if chip8.draw_flag { 
+            draw(&mut raylib_handler, &raylib_thread_handler, &chip8); 
+            chip8.draw_flag = false;
+        }
 
         if let Some(dur) = Duration::from_secs_f64(cycle).checked_sub(now.elapsed()){
             sleep(dur);

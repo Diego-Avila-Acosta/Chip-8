@@ -92,7 +92,8 @@ pub struct Chip8 {
     memory: [u8; 4096],
     pc: usize,
     sp: StackPointer,
-    pub display: [u64; 32]
+    pub display: [u64; 32],
+    pub draw_flag: bool
 }
 
 impl Chip8 {
@@ -119,7 +120,8 @@ impl Chip8 {
             memory,
             pc: offset,
             sp: StackPointer::new(),
-            display: [0; 32]
+            display: [0; 32],
+            draw_flag: false
         }
     }
 
@@ -320,9 +322,10 @@ impl Chip8 {
                 self.registers[addr] = number & value;
             },
             Instruction::Display(typ) => {
+                self.draw_flag = true;
                 match typ {
                     Display::Clear => self.display = [0; 32],
-                    Display::DisplayBytes(x, mut y, n) => {
+                    Display::DisplayBytes(x, y, n) => {
                         let mut sprites: [u8; 16] = [0;16];
                         let x = self.registers[x];
                         let mut y = self.registers[y] as usize;
