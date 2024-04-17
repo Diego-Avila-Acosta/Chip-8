@@ -1,3 +1,5 @@
+use crate::DELTA_TIME;
+
 pub struct Timer{
     pub number: u8,
     flag: bool,
@@ -23,9 +25,9 @@ impl Timer {
 
     pub fn get(&self) -> u8 { self.number }
 
-    pub fn check(&mut self, delta_time: f64) {
+    pub fn check(&mut self) {
         if self.flag {
-            self.acc += delta_time;
+            unsafe { self.acc += DELTA_TIME; }
 
             while self.acc >= self.cycle{
                 self.decrement();
