@@ -1,5 +1,6 @@
 use crate::stack::StackPointer;
 use crate::timer::Timer;
+use crate::config::Config;
 use super::rom::Rom;
 use rand::prelude::*;
 
@@ -95,7 +96,7 @@ pub struct Chip8 {
 }
 
 impl Chip8 {
-    pub fn new(rom: Rom) -> Chip8{
+    pub fn new(rom: Rom, config: &Config) -> Chip8{
         let mut memory: [u8; 4096] = [0; 4096];
         
         let mut i = 0;
@@ -105,18 +106,18 @@ impl Chip8 {
                 i += 1;
             }
         }
-
-        for (i, addr) in (0x200..(rom.length + 0x200)).enumerate(){
+        let offset = config.rom_offset as usize;
+        for (i, addr) in (offset..(rom.length + offset)).enumerate(){
             memory[addr] = rom.program[i];
         }
 
         Chip8 {
             registers: [0; 16],
             i_register: 0,
-            delay_timer: Timer::new(60),
-            sound_timer: Timer::new(60),
+            delay_timer: Timer::new(config.delay_timer_hertz),
+            sound_timer: Timer::new(config.sound_timer_hertz),
             memory,
-            pc: 0x200,
+            pc: offset,
             sp: StackPointer::new(),
             display: [0; 32]
         }
